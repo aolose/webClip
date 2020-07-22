@@ -26,6 +26,6 @@ open `http://127.0.0.1:7001`
 
 ### add service (ubuntu)
 - edit webclip.service  
-- cp webc startlip.service /etc/systemd/system/webclip.service
+- `cp webclip.service /etc/systemd/system/webclip.service`
 - `systemctl daemon-reload`
 - `service webclip start`

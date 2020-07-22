@@ -1,0 +1,20 @@
+
+[Unit]
+Description=WebClip
+After=network.target
+
+[Service]
+ExecStart=/home/webClip/src/main -web=/home/webClip/public -crt=/etc/letsencrypt/live/xxxx.com/cert.pem -key=/etc/letsencrypt/live/xxxx.com/privkey.pem -ca=/etc/letsencrypt/live/xxxx.com/chain.pem
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+LimitNPROC=512
+PrivateTmp=true
+ProtectSystem=full
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+Restart=always
+RestartSec=120
+
+
+[Install]
+WantedBy=multi-user.target

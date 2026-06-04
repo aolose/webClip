@@ -1,7 +1,7 @@
 # online webClip
 [Demo](https://ivi.cx)
 
-![preview](preview.png)
+![preview](preview.webp)
 
 ### build from source 
 - `git clone https://github.com/aolose/webClip.git`

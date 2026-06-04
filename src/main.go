@@ -1,13 +1,15 @@
 package main
 
-import "flag"
-import . "webClip/api"
+import (
+	"flag"
+	"webClip/api"
+)
 
 func main() {
-	var ip = flag.String("web", "../public", "please input you web root")
-	var c = flag.String("crt", "", "please input you  crt path")
-	var k = flag.String("key", "", "please input you  key path")
-	var u = flag.String("ca", "", "please input you  ca path")
+	webRoot := flag.String("web", "../public", "please input your web root")
+	crt := flag.String("crt", "", "please input your crt path")
+	key := flag.String("key", "", "please input your key path")
+	ca := flag.String("ca", "", "please input your ca path")
 	flag.Parse()
-	Run(*ip, *c, *k, *u)
+	api.Run(*webRoot, *crt, *key, *ca)
 }

@@ -1,0 +1,40 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # 当你推入形如 v1.0.0 的 tag 时触发
+
+permissions:
+  contents: write # 赋予 Action 写入 Release 的权限
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22' # 匹配项目最新的 Go 版本
+
+      - name: Build binary
+        run: |
+          cd src
+          go mod tidy
+          # GOOS=linux GOARCH=amd64 可以根据需要交叉编译，这里以 Linux 二进制为例
+          GOOS=linux GOARCH=amd64 go build -o ../webclip-linux-amd64
+
+      - name: Package assets
+        run: |
+          # 将编译好的二进制和前端静态资源(public文件夹)一起打包
+          tar -czvf webclip-linux-amd64.tar.gz webclip-linux-amd64 public/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: webclip-linux-amd64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

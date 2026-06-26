@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -101,6 +102,61 @@ type Payload struct {
 type SimplePayload struct {
 	URL  string `json:"u"`
 	Time int64  `json:"t"`
+}
+
+// sensitiveParams lists query parameter names whose values should be redacted.
+var sensitiveParams = map[string]bool{
+	"token": true, "key": true, "secret": true, "auth": true,
+	"password": true, "passwd": true, "pass": true,
+	"access_token": true, "api_key": true, "apikey": true,
+	"sign": true, "signature": true, "authorization": true,
+	"bearer": true, "jwt": true, "credential": true,
+	"private": true, "api_secret": true, "apisecret": true,
+	"client_secret": true, "clientsecret": true,
+	"refresh_token": true, "refreshtoken": true,
+	"session": true, "sid": true,
+}
+
+// isSensitiveParam reports whether name (case-insensitive) is a sensitive parameter.
+func isSensitiveParam(name string) bool {
+	return sensitiveParams[strings.ToLower(name)]
+}
+
+// sanitizeURL redacts sensitive query parameter values, strips the fragment,
+// and masks embedded passwords, returning a safe-for-listing URL string.
+func sanitizeURL(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return raw
+	}
+
+	// Redact sensitive query parameter values.
+	if u.RawQuery != "" {
+		q := u.Query()
+		for k, vs := range q {
+			if isSensitiveParam(k) {
+				for i, v := range vs {
+					if len(v) > 3 {
+						vs[i] = "***"
+					}
+				}
+				q[k] = vs
+			}
+		}
+		u.RawQuery = q.Encode()
+	}
+
+	// Strip fragment.
+	u.Fragment = ""
+
+	// Mask embedded password.
+	if u.User != nil {
+		if pass, hasPass := u.User.Password(); hasPass && pass != "" {
+			u.User = url.UserPassword(u.User.Username(), "***")
+		}
+	}
+
+	return u.String()
 }
 
 var (
@@ -201,7 +257,7 @@ func Run(webRoot string, crt string, key string, ca string) {
 		a := make([]SimplePayload, 0, len(cache))
 		for _, v := range cache {
 			a = append(a, SimplePayload{
-				URL:  v.URL,
+				URL:  sanitizeURL(v.URL),
 				Time: v.Time.Unix(),
 			})
 		}
